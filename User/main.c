@@ -1,36 +1,61 @@
 /**
  * @author Dmitry Proshutinsky (sodaspace@yandex.ru)
- * @brief I2C to SPI/GPIO interface converter
- * @version 0.02
+ * @brief I2C to SPI/GPO interface converter
+ * @note Connection diagram:
  *
- * @todo:
- * - second i2c address or mode pin
- * - settings: CPOL, CPHA, frequency
- * - several CSs and buffers (?)
- * - get, reset counters
- *
- * @note connection diagram:
  *           SWIO  o  o
- *       ©∞©§©§©§©§©§©§©ÿ©§©§©ÿ©§©§©ÿ©§©§©§©§©§©§©¥
- *       ©¶   SWIO  V  G      ©¶
- *  SCK ©§©» PC5           PC4 ©¿©§ ?
- * MOSI ©§©» PC6           PC3 ©¿©§ ?
- * MISO ©§©» PC7           PC2 ©¿©§ SCL
- *  NSS ©§©» PD0           PC1 ©¿©§ SDA
- * SWIO ©§©» PD1           PC0 ©¿©§ BUSY
- *    ? ©§©» PD2           PA2 ©¿©§ ?
- *    ? ©§©» PD3           PA1 ©¿©§ ?
- *    ? ©§©» PD4           PD6 ©¿©§ RX
- * NRST ©§©» PD7           PD5 ©¿©§ TX
- *    o ©§©» V               V ©¿©§ o
- *    o ©§©» G               G ©¿©§ o
- *       ©¶      VT1772       ©¶
- *       ©¶   CH32V003F4P6    ©¶
- *       ©∏©§©§©§©§©§©§©§©§©§©§©§©§©§©§©§©§©§©§©§©º
+ *       ‚îå‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚î¥‚îÄ‚îÄ‚î¥‚îÄ‚îÄ‚î¥‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îê
+ *       ‚îÇ   SWIO  V  G      ‚îÇ
+ *  SCK ‚îÄ‚î§ PC5           PC4 ‚îú‚îÄ MODE
+ * MOSI ‚îÄ‚î§ PC6           PC3 ‚îú‚îÄ BUSY
+ * MISO ‚îÄ‚î§ PC7           PC2 ‚îú‚îÄ SCL
+ *  NSS ‚îÄ‚î§ PD0           PC1 ‚îú‚îÄ SDA
+ * SWIO ‚îÄ‚î§ PD1           PC0 ‚îú‚îÄ ?
+ * GPO1 ‚îÄ‚î§ PD2           PA2 ‚îú‚îÄ ?
+ * GPO2 ‚îÄ‚î§ PD3           PA1 ‚îú‚îÄ ?
+ * GPO3 ‚îÄ‚î§ PD4           PD6 ‚îú‚îÄ RX
+ * NRST ‚îÄ‚î§ PD7           PD5 ‚îú‚îÄ TX
+ *    o ‚îÄ‚î§ V               V ‚îú‚îÄ o
+ *    o ‚îÄ‚î§ G               G ‚îú‚îÄ o
+ *       ‚îÇ      VT1772       ‚îÇ
+ *       ‚îÇ   CH32V003F4P6    ‚îÇ
+ *       ‚îî‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îò
  */
 
-#include <ch32v00x.h>
+#include <string.h>
+
+#include "ch32v00x.h"
 #include "debug.h"
+
+#define VERSION "0.03"
+
+#define CMD_GET_RXC      0x11
+#define CMD_GET_TXC      0x12
+#define CMD_RESET_RXC    0x91
+#define CMD_RESET_TXC    0x92
+#define CMD_CTRL_GPO1    0xA1
+#define CMD_CTRL_GPO2    0xA2
+#define CMD_CTRL_GPO3    0xA3
+#define CMD_SPI_MODE     0xC1
+#define CMD_SPI_BAUDRATE 0xC2
+
+#define GPO1 1
+#define GPO2 2
+#define GPO3 3
+
+#define SPI_MODE_0 0 // CPOL = 0, CPHA = 0
+#define SPI_MODE_1 1 // CPOL = 0, CPHA = 1
+#define SPI_MODE_2 2 // CPOL = 1, CPHA = 0
+#define SPI_MODE_3 3 // CPOL = 1, CPHA = 1
+
+#define SPI_BAUDRATE_2   1
+#define SPI_BAUDRATE_4   2
+#define SPI_BAUDRATE_8   3
+#define SPI_BAUDRATE_16  4
+#define SPI_BAUDRATE_32  5
+#define SPI_BAUDRATE_64  6
+#define SPI_BAUDRATE_128 7
+#define SPI_BAUDRATE_256 8
 
 #define I2C_ADDRESS 0x51
 
@@ -93,6 +118,25 @@ static void init_i2c(void)
     I2C_Cmd(I2C1, ENABLE);
 }
 
+/* gpio mode initialization ***************************************************/
+/**
+ * @note gpio mode states:
+ * - HIGH - data transfer
+ * - LOW - configuration
+ */
+static void init_gpio_mode(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+
+    // PC4 - MODE
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+}
+
 /* gpio busy initialization ***************************************************/
 /**
  * @note gpio busy states:
@@ -105,12 +149,41 @@ static void init_gpio_busy(void)
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 
-    // PC0 - BUSY
-    GPIO_ResetBits(GPIOC, GPIO_Pin_0);
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    // PC3 - BUSY
+    GPIO_ResetBits(GPIOC, GPIO_Pin_3);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOC, &GPIO_InitStructure);
+}
+
+/* gpio user initialization ***************************************************/
+static void init_gpio_user(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+
+    // PD2 - GPO1
+    GPIO_ResetBits(GPIOD, GPIO_Pin_2);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+    // PD3 - GPO2
+    GPIO_ResetBits(GPIOD, GPIO_Pin_3);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+    // PD4 - GPO3
+    GPIO_ResetBits(GPIOD, GPIO_Pin_4);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
 /* spi initialization *********************************************************/
@@ -165,6 +238,86 @@ static void init_spi(void)
     SPI_Cmd(SPI1, ENABLE);
 }
 
+/* spi update mode ************************************************************/
+static void update_spi_mode(uint8_t mode)
+{
+    uint16_t reg, cpy;
+
+    SPI_Cmd(SPI1, DISABLE);
+    reg = SPI1->CTLR1;
+
+    cpy = reg;
+    reg &= ~0x0003; // xxxx xxxx xxxx xx00
+
+    switch (mode)
+    {
+    case SPI_MODE_0:
+        reg |= SPI_CPOL_Low | SPI_CPHA_1Edge;
+        break;
+    case SPI_MODE_1:
+        reg |= SPI_CPOL_Low | SPI_CPHA_2Edge;
+        break;
+    case SPI_MODE_2:
+        reg |= SPI_CPOL_High | SPI_CPHA_1Edge;
+        break;
+    case SPI_MODE_3:
+        reg |= SPI_CPOL_High | SPI_CPHA_2Edge;
+        break;
+    default: // invalid mode
+        reg = cpy;
+        break;
+    }
+
+    SPI1->CTLR1 = reg;
+    SPI_Cmd(SPI1, ENABLE);
+}
+
+/* spi update mode ************************************************************/
+static void update_spi_baudrate(uint8_t baudrate)
+{
+    uint16_t reg, cpy;
+
+    SPI_Cmd(SPI1, DISABLE);
+    reg = SPI1->CTLR1;
+
+    cpy = reg;
+    reg &= ~0x0038; // xxxx xxxx xx00 0xxx
+
+    switch (baudrate)
+    {
+    case SPI_BAUDRATE_2:
+        reg |= SPI_BaudRatePrescaler_2;
+        break;
+    case SPI_BAUDRATE_4:
+        reg |= SPI_BaudRatePrescaler_4;
+        break;
+    case SPI_BAUDRATE_8:
+        reg |= SPI_BaudRatePrescaler_8;
+        break;
+    case SPI_BAUDRATE_16:
+        reg |= SPI_BaudRatePrescaler_16;
+        break;
+    case SPI_BAUDRATE_32:
+        reg |= SPI_BaudRatePrescaler_32;
+        break;
+    case SPI_BAUDRATE_64:
+        reg |= SPI_BaudRatePrescaler_64;
+        break;
+    case SPI_BAUDRATE_128:
+        reg |= SPI_BaudRatePrescaler_128;
+        break;
+    case SPI_BAUDRATE_256:
+        reg |= SPI_BaudRatePrescaler_256;
+        break;
+    default: // invalid baudrate
+        reg = cpy;
+        break;
+    }
+
+    SPI1->CTLR1 = reg;
+    SPI_Cmd(SPI1, ENABLE);
+}
+
 /* dma spi tx initialization **************************************************/
 static void init_dma_spi_tx(void)
 {
@@ -211,16 +364,22 @@ static void init_dma_spi_rx(void)
     NVIC_EnableIRQ(DMA1_Channel2_IRQn);
 }
 
+/* mode state *****************************************************************/
+inline static uint8_t is_conf_mode(void)
+{
+    return !GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_4);
+}
+
 /* busy active ****************************************************************/
 inline static void busy_active(void)
 {
-    GPIO_SetBits(GPIOC, GPIO_Pin_0);
+    GPIO_SetBits(GPIOC, GPIO_Pin_3);
 }
 
 /* busy inactive ****************************************************************/
 inline static void busy_inactive(void)
 {
-    GPIO_ResetBits(GPIOC, GPIO_Pin_0);
+    GPIO_ResetBits(GPIOC, GPIO_Pin_3);
 }
 
 /* spi cs active **************************************************************/
@@ -235,6 +394,25 @@ inline static void spi_cs_inactive(void)
     GPIO_SetBits(GPIOD, GPIO_Pin_0);
 }
 
+/* gpio user ************************************************************/
+inline static void gpio_user_set(uint8_t gpo, uint8_t val)
+{
+    switch (gpo)
+    {
+    case GPO1:
+        GPIO_WriteBit(GPIOD, GPIO_Pin_2, val ? Bit_SET : Bit_RESET);
+        break;
+    case GPO2:
+        GPIO_WriteBit(GPIOD, GPIO_Pin_3, val ? Bit_SET : Bit_RESET);
+        break;
+    case GPO3:
+        GPIO_WriteBit(GPIOD, GPIO_Pin_4, val ? Bit_SET : Bit_RESET);
+        break;
+    default: // invalid gpo
+        break;
+    }
+}
+
 /* start spi dma transfer *****************************************************/
 static void spi_dma_transfer(void)
 {
@@ -246,6 +424,39 @@ static void spi_dma_transfer(void)
 
     DMA_Cmd(DMA1_Channel2, ENABLE); // RX
     DMA_Cmd(DMA1_Channel3, ENABLE); // TX
+}
+
+/* configuration mode - read conf *********************************************/
+static void conf_rd(void)
+{
+    uint8_t cmd = map[0];
+
+    if (cmd == CMD_GET_RXC)
+        memcpy(map, (uint8_t *) &rxc, sizeof(rxc));
+    else if (cmd == CMD_GET_TXC)
+        memcpy(map, (uint8_t *) &txc, sizeof(txc));
+}
+
+/* configuration mode - write conf ********************************************/
+static void conf_wr(void)
+{
+    uint8_t cmd = map[0];
+    uint8_t val = map[1];
+
+    if (cmd == CMD_RESET_RXC)
+        rxc = 0;
+    else if (cmd == CMD_RESET_TXC)
+        txc = 0;
+    else if (cmd == CMD_CTRL_GPO1)
+        gpio_user_set(GPO1, val);
+    else if (cmd == CMD_CTRL_GPO2)
+        gpio_user_set(GPO2, val);
+    else if (cmd == CMD_CTRL_GPO3)
+        gpio_user_set(GPO3, val);
+    else if (cmd == CMD_SPI_MODE)
+        update_spi_mode(val);
+    else if (cmd == CMD_SPI_BAUDRATE)
+        update_spi_baudrate(val);
 }
 
 /* i2c irq ********************************************************************/
@@ -277,6 +488,10 @@ void I2C1_EV_IRQHandler(void)
     // Byte requested
     if (status & I2C_STAR1_TXE)
     {
+        // Configuration
+        if (!len && is_conf_mode())
+            conf_rd();
+
         // Skip first
         if (len)
             txc++;
@@ -293,13 +508,23 @@ void I2C1_EV_IRQHandler(void)
     // Stop condition
     if (status & I2C_STAR1_STOPF)
     {
-        busy_active();
+        // Configuration
+        if (is_conf_mode())
+        {
+            conf_wr();
+        }
+        // SPI transfer
+        else
+        {
+            busy_active();
 
-        I2C_AcknowledgeConfig(I2C1, DISABLE);
-        I2C_Cmd(I2C1, ENABLE); // Not nesessary
+            I2C_AcknowledgeConfig(I2C1, DISABLE);
 
-        spi_cs_active();
-        spi_dma_transfer();
+            spi_cs_active();
+            spi_dma_transfer();
+        }
+
+        I2C_Cmd(I2C1, ENABLE);
     }
 }
 
@@ -336,13 +561,16 @@ int main(void)
     init_spi();
     init_dma_spi_tx();
     init_dma_spi_rx();
+    init_gpio_mode();
     init_gpio_busy();
+    init_gpio_user();
 
     Delay_Init();
     USART_Printf_Init(115200);
 
-    printf("SystemClk: %d\r\n", SystemCoreClock);
-    printf("ChipID: %08x\r\n", DBGMCU_GetCHIPID());
+    printf("version: %s\r\n", VERSION);
+    printf("chip id: %08x\r\n", DBGMCU_GetCHIPID());
+    printf("system clock: %d\r\n", SystemCoreClock);
 
     for (;;)
     {
