@@ -77,8 +77,8 @@ I2C slave address: `0x51`
 |GPIO2_SET|`0x22`|Set GPIO2 output value|`i2ctransfer -y 0 w2@0x51 0x22 0x01`|
 |GPIO3_SET|`0x23`|Set GPIO3 output value|`i2ctransfer -y 0 w2@0x51 0x23 0x01`|
 |GPIO1_MODE|`0x31`|Set GPIO1 [mode](#gpio-modes)|`i2ctransfer -y 0 w2@0x51 0x31 0x02`|
-|GPIO2_MODE|`0x32`|Set GPIO1 [mode](#gpio-modes)|`i2ctransfer -y 0 w2@0x51 0x32 0x02`|
-|GPIO3_MODE|`0x33`|Set GPIO1 [mode](#gpio-modes)|`i2ctransfer -y 0 w2@0x51 0x33 0x02`|
+|GPIO2_MODE|`0x32`|Set GPIO2 [mode](#gpio-modes)|`i2ctransfer -y 0 w2@0x51 0x32 0x02`|
+|GPIO3_MODE|`0x33`|Set GPIO3 [mode](#gpio-modes)|`i2ctransfer -y 0 w2@0x51 0x33 0x02`|
 |SPI_MODE|`0x30`|Set SPI [mode](#spi-modes)|`i2ctransfer -y 0 w2@0x51 0x30 0x01`|
 |SPI_BAUDRATE|`0x40`|Set SPI [baudrate](#spi-baudrates)|`i2ctransfer -y 0 w2@0x51 0x40 0x05`|
 
