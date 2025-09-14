@@ -48,6 +48,8 @@ MCU reference manual: [wch-ic.com](https://www.wch-ic.com/downloads/CH32V003RM_P
 ### Interface
 I2C slave address: `0x51`
 
+SPI buffer size: 1024 bytes
+
 ##### Command byte
 ```
 ┌────┬────┬────┬────┬────┬────┬────┬────┐
