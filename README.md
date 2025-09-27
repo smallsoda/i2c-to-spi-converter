@@ -85,29 +85,29 @@ SPI buffer size: 1024 bytes
 |SPI_BAUDRATE|`0x40`|Set SPI [baudrate](#spi-baudrates)|`i2ctransfer -y 0 w2@0x51 0x40 0x05`|
 
 ##### GPIO modes
-|Mode|Value|Description|
-|-|-|-|
-|GPIO_MODE_IN_FL|`0x00`|Input floating|
-|GPIO_MODE_IN_PU|`0x01`|Input pull-up|
-|GPIO_MODE_OUT_PP|`0x02`|Output push-pull|
-|GPIO_MODE_OUT_OD|`0x03`|Output open-drain|
+|Mode|Value|Description|Default|
+|-|-|-|-|
+|GPIO_MODE_IN_FL|`0x00`|Input floating||
+|GPIO_MODE_IN_PU|`0x01`|Input pull-up|*|
+|GPIO_MODE_OUT_PP|`0x02`|Output push-pull||
+|GPIO_MODE_OUT_OD|`0x03`|Output open-drain||
 
 ##### SPI modes
-|Mode|Value|Description|
-|-|-|-|
-|SPI_MODE_0|`0x00`|CPOL = 0, CPHA = 0|
-|SPI_MODE_1|`0x01`|CPOL = 0, CPHA = 1|
-|SPI_MODE_2|`0x02`|CPOL = 1, CPHA = 0|
-|SPI_MODE_3|`0x03`|CPOL = 1, CPHA = 1|
+|Mode|Value|Description|Default|
+|-|-|-|-|
+|SPI_MODE_0|`0x00`|CPOL = 0, CPHA = 0|*|
+|SPI_MODE_1|`0x01`|CPOL = 0, CPHA = 1||
+|SPI_MODE_2|`0x02`|CPOL = 1, CPHA = 0||
+|SPI_MODE_3|`0x03`|CPOL = 1, CPHA = 1||
 
 ##### SPI baudrates
-|Mode|Value|Description|
-|-|-|-|
-|SPI_BAUDRATE_2|`0x01`|48MHz / 2 = 24MHz|
-|SPI_BAUDRATE_4|`0x02`|48MHz / 4 = 12MHz|
-|SPI_BAUDRATE_8|`0x03`|48MHz / 8 = 6MHz|
-|SPI_BAUDRATE_16|`0x04`|48MHz / 16 = 3MHz|
-|SPI_BAUDRATE_32|`0x05`|48MHz / 32 = 1,5MHz|
-|SPI_BAUDRATE_64|`0x06`|48MHz / 64 = 750kHz|
-|SPI_BAUDRATE_128|`0x07`|48MHz / 128 = 375kHz|
-|SPI_BAUDRATE_256|`0x08`|48MHz / 256 = 187,5kHz|
+|Mode|Value|Description|Default|
+|-|-|-|-|
+|SPI_BAUDRATE_2|`0x01`|48MHz / 2 = 24MHz||
+|SPI_BAUDRATE_4|`0x02`|48MHz / 4 = 12MHz||
+|SPI_BAUDRATE_8|`0x03`|48MHz / 8 = 6MHz||
+|SPI_BAUDRATE_16|`0x04`|48MHz / 16 = 3MHz||
+|SPI_BAUDRATE_32|`0x05`|48MHz / 32 = 1,5MHz|*|
+|SPI_BAUDRATE_64|`0x06`|48MHz / 64 = 750kHz||
+|SPI_BAUDRATE_128|`0x07`|48MHz / 128 = 375kHz||
+|SPI_BAUDRATE_256|`0x08`|48MHz / 256 = 187,5kHz||
