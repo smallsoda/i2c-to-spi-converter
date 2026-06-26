@@ -38,12 +38,28 @@ MCU reference manual: [wch-ic.com](https://www.wch-ic.com/downloads/CH32V003RM_P
 |GPIO2|PD3|User GPIO|User GPIO|I/O|
 |GPIO3|PD4|User GPIO|User GPIO|I/O|
 |NRST|PD7|NRST|Reset||
+|+|V||Power||
+|-|G||Power||
+
+|Name|Pin|Group|Description|*|
+|-|-|-|-|-|
 |MODE|PC4|Control interface|`HIGH` - data transfer, `LOW` - configuration|IPU|
 |BUSY|PC3|Control interface|`HIGH` - busy, `LOW` - ready|O|
 |SCL|PC2|I2C|I2C slave||
 |SDA|PC1|I2C|I2C slave||
+|?|PC0||||
+|?|PA2||||
+|?|PA1||||
 |RX|PD6|UART|Debug UART (not used)||
 |TX|PD5|UART|Debug UART||
+|+|V||Power||
+|-|G||Power||
+
+|Name|Pin|Group|Description|*|
+|-|-|-|-|-|
+|SWIO|SWIO|SWIO|Software update||
+|+|V||Power||
+|-|G||Power||
 
 ### Interface
 I2C slave address: `0x51`
