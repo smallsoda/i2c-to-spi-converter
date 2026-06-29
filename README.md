@@ -9,57 +9,53 @@ MCU reference manual: [wch-ic.com](https://www.wch-ic.com/downloads/CH32V003RM_P
 
 ### Pinout
 ```
-            SWIO  o  o
-        ┌──────┴──┴──┴──────┐
-        │   SWIO  V  G      │
-   SCK ─┤ PC5           PC4 ├─ MODE
-  MOSI ─┤ PC6           PC3 ├─ BUSY
-  MISO ─┤ PC7           PC2 ├─ SCL
-   NSS ─┤ PD0           PC1 ├─ SDA
-  SWIO ─┤ PD1           PC0 ├─ ?
- GPIO1 ─┤ PD2           PA2 ├─ ?
- GPIO2 ─┤ PD3           PA1 ├─ ?
- GPIO3 ─┤ PD4           PD6 ├─ RX
-  NRST ─┤ PD7           PD5 ├─ TX
-     o ─┤ V               V ├─ o
-     o ─┤ G               G ├─ o
-        │   CH32V003F4P6    │
-        └───────────────────┘
+                   [T1]  [T2]  [T3]
+
+                    SWIO  o  o
+                ┌──────┴──┴──┴──────┐
+                │   SWIO  V  G      │
+[L1]       SCK ─┤ PC5           PC4 ├─ MODE     [R1]
+[L2]      MOSI ─┤ PC6           PC3 ├─ BUSY     [R2]
+[L3]      MISO ─┤ PC7           PC2 ├─ SCL      [R3]
+[L4]       NSS ─┤ PD0           PC1 ├─ SDA      [R4]
+[L5]      SWIO ─┤ PD1           PC0 ├─ ?        [R5]
+[L6]     GPIO1 ─┤ PD2           PA2 ├─ ?        [R6]
+[L7]     GPIO2 ─┤ PD3           PA1 ├─ ?        [R7]
+[L8]     GPIO3 ─┤ PD4           PD6 ├─ RX       [R8]
+[L9]      NRST ─┤ PD7           PD5 ├─ TX       [R9]
+[L10]        o ─┤ V               V ├─ o        [R10]
+[L11]        o ─┤ G               G ├─ o        [R11]
+                │   CH32V003F4P6    │
+                └───────────────────┘
 ```
 
-|Name|Pin|Group|Description|*|
-|-|-|-|-|-|
-|SCK|PC5|SPI|SPI master||
-|MOSI|PC6|SPI|SPI master||
-|MISO|PC7|SPI|SPI master||
-|NSS|PD0|SPI|SPI master||
-|SWIO|PD1|SWIO|Software update||
-|GPIO1|PD2|User GPIO|User GPIO|I/O|
-|GPIO2|PD3|User GPIO|User GPIO|I/O|
-|GPIO3|PD4|User GPIO|User GPIO|I/O|
-|NRST|PD7|NRST|Reset||
-|+|V||Power||
-|-|G||Power||
-
-|Name|Pin|Group|Description|*|
-|-|-|-|-|-|
-|MODE|PC4|Control interface|`HIGH` - data transfer, `LOW` - configuration|IPU|
-|BUSY|PC3|Control interface|`HIGH` - busy, `LOW` - ready|O|
-|SCL|PC2|I2C|I2C slave||
-|SDA|PC1|I2C|I2C slave||
-|?|PC0||||
-|?|PA2||||
-|?|PA1||||
-|RX|PD6|UART|Debug UART (not used)||
-|TX|PD5|UART|Debug UART||
-|+|V||Power||
-|-|G||Power||
-
-|Name|Pin|Group|Description|*|
-|-|-|-|-|-|
-|SWIO|SWIO|SWIO|Software update||
-|+|V||Power||
-|-|G||Power||
+||Name|Pin|Group|Description|*|
+|-|-|-|-|-|-|
+|_L1_|SCK|PC5|SPI|SPI master||
+|_L2_|MOSI|PC6|SPI|SPI master||
+|_L3_|MISO|PC7|SPI|SPI master||
+|_L4_|NSS|PD0|SPI|SPI master||
+|_L5_|SWIO|PD1|SWIO|Software update||
+|_L6_|GPIO1|PD2|User GPIO|User GPIO|I/O|
+|_L7_|GPIO2|PD3|User GPIO|User GPIO|I/O|
+|_L8_|GPIO3|PD4|User GPIO|User GPIO|I/O|
+|_L9_|NRST|PD7|NRST|Reset||
+|_L10_|+|V||Power||
+|_L11_|-|G||Power||
+|_R1_|MODE|PC4|Control interface|`HIGH` - data transfer, `LOW` - configuration|IPU|
+|_R2_|BUSY|PC3|Control interface|`HIGH` - busy, `LOW` - ready|O|
+|_R3_|SCL|PC2|I2C|I2C slave||
+|_R4_|SDA|PC1|I2C|I2C slave||
+|_R5_|?|PC0||||
+|_R6_|?|PA2||||
+|_R7_|?|PA1||||
+|_R8_|RX|PD6|UART|Debug UART (not used)||
+|_R9_|TX|PD5|UART|Debug UART||
+|_R10_|+|V||Power||
+|_R11_|-|G||Power||
+|_T1_|SWIO|SWIO|SWIO|Software update||
+|_T2_|+|V||Power||
+|_T3_|-|G||Power||
 
 ### Interface
 I2C slave address: `0x51`
